@@ -1,0 +1,10 @@
+name: sun_app
+title:
+username: luduel
+account: luduel
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 16242918
+bundleId: 11276127
+url: https://luduel.shinyapps.io/sun_app/
+version: 1

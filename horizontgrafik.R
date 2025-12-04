@@ -11,7 +11,7 @@ source("sun_position.R")
 files <- list.files(pattern = "\\.tif$", full.names = TRUE)
 rasters <- lapply(files, rast)
 dem <- do.call(mosaic, rasters)
-plot(dem)
+plot(dem, main = "Schweizer Alpen")
 
 # res(dem)
 # ext(dem)
@@ -31,19 +31,19 @@ plot(dem)
 # Horizontwinkel an bestimmten Orten
 lon <- 9.25
 lat <- 46.79
-sagogn <- horizon(dem, lon, lat)
+sagogn <- horizon(dem, lat, lon)
 
 lon <- 9.282
 lat <- 46.787
-valendas <- horizon(dem, lon, lat)
+valendas <- horizon(dem, lat, lon)
 
 # Sonnenposition über den Tag berechnen
 datum <- as.Date("2025-06-21")
-sonne_jun <- sun_position(datum, lon, lat)
+sonne_jun <- sun_position(lat, lon, datum)
 datum <- as.Date("2025-12-21")
-sonne_dez <- sun_position(datum, lon, lat)
+sonne_dez <- sun_position(lat, lon, datum)
 datum <- as.Date("2025-03-21")
-sonne_mar <- sun_position(datum, lon, lat)
+sonne_mar <- sun_position(lat, lon, datum)
 
 ggplot() +
   # Horizontwinkel

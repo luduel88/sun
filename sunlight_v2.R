@@ -3,8 +3,11 @@ library(suncalc)
 library(ggplot2)
 library(data.table)
 
-setwd("~/R")
+setwd("~/sun")
+source("inc_angle.R")
+source("am_factor.R")
 source("energy_needed.R")
+source("deg_to_rad.R")
 
 # Location Alpen Schweiz (Andermatt)
 latitude <- 46.6
@@ -27,18 +30,6 @@ hillside <- expand.grid(aspect = seq(from = 180, to = -179.9, by = -45),
                         slope = seq(from = 0, to = 40, by = 10))
 hillside <- subset(hillside, slope > 0 | aspect == 0)
 
-# Function angle on hillside
-inc_angle <- function(altitude, azimuth, slope, aspect) {
-  angle <- sin(altitude) * cos(slope) + cos(altitude) * sin(slope) * cos(azimuth - aspect)
-  return(angle)
-}
-
-# Function Air Mass Factor
-am_factor <- function(altitude) {
-  factor <- exp(- 0.15 * (1 / sin(altitude) - 1))
-  return(factor)
-}
-
 # Function Aspect to azimuth
 dir2azimuth <- function(dir) {
   dir <- toupper(dir)
@@ -59,12 +50,6 @@ azimuth2dir <- function(azimuth) {
   return(dir)
 }
 
-# Deg to Rad
-to_rad <- function(deg) {
-  rad <- deg/180*pi
-  return(rad)
-}
-
 # sunposition during day
 sunposition <- getSunlightPosition(date = time, lat = latitude, lon = longitude)
 
@@ -73,21 +58,23 @@ table <- merge(sunposition, hillside, by = NULL)
 setDT(table)
 
 # Horizont hinzu
-horizont <- horizon(dem, lon, lat, azimuths = table[, azimuth + pi] / pi * 180) / 180 * pi
+horizont <- horizon(dem, lat, lon, azimuths = table[, azimuth + pi] / pi * 180) / 180 * pi
 horizont$azimuth <- round(horizont$azimuth - pi, 6)
 table[, azimuth := round(azimuth, 6)]
 table <- table[horizont, on = .(azimuth)]
 
 # compute radiation
 table[altitude > angle,
-              radiation := inc_angle(altitude, azimuth, to_rad(slope), to_rad(aspect))
+              radiation := inc_angle(altitude, azimuth, deg_to_rad(slope), deg_to_rad(aspect))
               * solarconstant
               * am_factor(altitude)]
 table[, radiation := radiation - emission]
 table[radiation < 0 | is.na(radiation), radiation := 0]
 table[, cum_radiation_day_MJ := cumsum(radiation*15*60/1000000), by = .(format(date, "%Y-%m-%d"), aspect, slope)]
 
-# analysis
+# Analysis
+
+# Tagesverlauf
 tag <- "2025-03-15"
 inc <- 30
 output <- table[format(date, "%Y-%m-%d") == tag & aspect == -90 & slope == inc]
@@ -95,7 +82,6 @@ output2 <- table[format(date, "%Y-%m-%d") == tag & aspect == 0 & slope == inc]
 output3 <- table[format(date, "%Y-%m-%d") == tag & aspect == 90 & slope == inc]
 output4 <- table[format(date, "%Y-%m-%d") == tag & aspect == 180 & slope == inc]
 
-# Tagesverlauf
 ggplot() +
   geom_line(
     data = output,
