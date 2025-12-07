@@ -16,9 +16,9 @@ source("deg_to_rad.R")
 source("get_exposition.R")
 
 # DEM laden, Slope und Exposition rechnen
-dem <- rast("data/dem_switzerland_50m_wgs84.tif")
-slope <- terrain(dem, v = "slope", unit = "degrees")
-aspect <- terrain(dem, v = "aspect", unit = "degrees")
+# dem <- rast("data/dem_switzerland_50m_wgs84.tif")
+# slope <- terrain(dem, v = "slope", unit = "degrees")
+# aspect <- terrain(dem, v = "aspect", unit = "degrees")
 
 # Parameters
 solarconstant <- 1000 # W/m2
@@ -34,6 +34,7 @@ ui <- fluidPage(
       # CSS zum Entfernen der Pfeile
       tags$style(
         HTML("
+            /* Keine Pfeile bei Eingabefeldern */
             input[type='number']::-webkit-inner-spin-button,
             input[type='number']::-webkit-outer-spin-button {
               -webkit-appearance: none;
@@ -42,11 +43,32 @@ ui <- fluidPage(
             input[type='number'] {
               -moz-appearance: textfield;
             }
+            /* Primär-Button: Berechnen */
+            #go {
+              background-color: #007BFF;  /* kräftiges Blau */
+              color: white;               /* Textfarbe weiß */
+              font-weight: bold;          /* fetter Text */
+              border-radius: 8px;         /* abgerundete Ecken */
+              padding: 8px 16px;          /* Innenabstand für schönere Größe */
+              border: none;               /* Rahmen entfernen */
+            }
+            
+            /* Hover-Effekt */
+            #go:hover {
+              background-color: #0056b3;  /* dunkleres Blau beim Hover */
+              cursor: pointer;             /* Mauszeiger ändert sich */
+            }
+            
+            /* Optional: Fokus-Effekt, wenn Button gedrückt */
+            #go:focus {
+              outline: none;
+              box-shadow: 0 0 0 2px rgba(0,123,255,0.5);
+            }
             ")
       ),
       
-      numericInput("lon", "Längengrad:", value = 9.25, min = 7, max = 10, step = 0.001),
-      numericInput("lat", "Breitengrad:", value = 46.79, min = 46, max = 47, step = 0.001),
+      numericInput("lon", "Längengrad:", value = 9.25, min = 5.902, max = 10.563, step = 0.001),
+      numericInput("lat", "Breitengrad:", value = 46.79, min = 45.688, max = 47.833, step = 0.001),
       
       dateInput("date", "Datum für Sonnenverlauf:", value = Sys.Date()),
       
@@ -54,8 +76,12 @@ ui <- fluidPage(
       actionButton("go", "Berechnen"),
       
       br(), br(),
-      h4("Geländeinformationen"),
-      tableOutput("terrain_table")
+      h4("Gelände am gewählten Punkt"),
+      tableOutput("terrain_table"),
+      
+      br(),
+      h4("Hang kritisch ab"),
+      textOutput("uhrzeit")
     ),
     
     mainPanel(
@@ -73,21 +99,20 @@ server <- function(input, output, session) {
   # -------------------------------------------------
   data_reactive <- eventReactive(input$go, {
     
-    validate(
-      need(input$lon >= 7 && input$lon <= 10, "Längengrad muss zwischen 7 und 10 Ost liegen"),
-      need(input$lat >= 46 && input$lat <= 47, "Breitengrad muss zwischen 46 und 47 Nord liegen")
-    )
-    
     lon <- input$lon
     lat <- input$lat
     date <- input$date
+    
+    validate(
+      need(!is.na(terra::extract(dem, cbind(lon, lat))[, 1]), "Punkt muss in der Schweiz liegen!")
+    )
     
     s <- sun_position(lat, lon, date, paste(interval, "min"))
     s$sun_azi_deg <- s$azimuth / pi * 180 + 180
     s$sun_alt_deg <- s$altitude / pi * 180
     
-    s$hill_azi_deg <- terra::extract(aspect, cbind(lon, lat))[,1]
-    s$hill_slo_deg <- terra::extract(slope, cbind(lon, lat))[,1]
+    s$hill_azi_deg <- terra::extract(aspect, cbind(lon, lat))[, 1]
+    s$hill_slo_deg <- terra::extract(slope, cbind(lon, lat))[, 1]
     
     s$horizont <- horizon(dem, lat, lon, azimuths = s$sun_azi_deg)$angle
     
@@ -98,7 +123,7 @@ server <- function(input, output, session) {
                              deg_to_rad(hill_slo_deg), deg_to_rad(hill_azi_deg)) *
         solarconstant * am_factor(deg_to_rad(sun_alt_deg))]
     
-    s[, radiation := radiation - emission]
+    s[, radiation := radiation - emission] # Korrektur für Abstrahlung
     s[radiation < 0 | is.na(radiation), radiation := 0]
     s[, cum_radiation_day_MJ := cumsum(radiation * interval * 60 / 1e6)]
     
@@ -107,9 +132,8 @@ server <- function(input, output, session) {
   
   # ---- Plot 1: Horizontprofil & Sonnenverlauf ----
   output$plot1 <- renderPlot({
+    
     s <- data_reactive()
-    lon <- input$lon
-    lat <- input$lat
     
     ggplot() +
       geom_ribbon(data = s,
@@ -139,24 +163,34 @@ server <- function(input, output, session) {
       theme(plot.title = element_text(face = "bold", hjust = 0.5),
             axis.text.x = element_text(angle = 45, hjust = 1),
             panel.grid.major.x = element_line(linewidth = 0.6, color = "grey30"))
-  })
+  }, res = 96)
   
   # ---- Plot 2: Kumulative Tagesstrahlung ----
   output$plot2 <- renderPlot({
+    
     s <- data_reactive()
+    
     
     ggplot(s, aes(x = time, y = cum_radiation_day_MJ)) +
       geom_line(color = "darkred", linewidth = 1) +
       geom_hline(yintercept = energy_needed_MJ(), linetype = "dashed", linewidth = 1) +
+      geom_text(
+        aes(x = as.POSIXct(paste(input$date, "21:30:00"), tz = "Europe/Berlin"),  # Position rechts
+            y = energy_needed_MJ(),
+            label = paste0("Energiebedarf: ", round(energy_needed_MJ(), 1), " MJ/m²")),
+        color = "black",
+        vjust = -0.5,  # leicht oberhalb der Linie
+        hjust = 1
+      ) +
       # Skalierung: auf kumulative Achse normieren
-      geom_line(aes(y = radiation / 30),       # Faktor anpassen!
+      geom_line(aes(y = radiation / 30), # Faktor anpassen!
                 color = "steelblue", linewidth = 1) +
       
       scale_y_continuous(
-        name = "Kumulative Strahlung (MJ/m²)",
+        name = "Energie (MJ/m²)",
         limits = c(0, 30),
         sec.axis = sec_axis(~ . * 30, # Rückskalieren!
-                            name = "Momentane Strahlung (W/m²)",
+                            name = "Nettostrahlung (W/m²)",
                             breaks = seq(0, 900, by = 300))
       ) +
       scale_x_datetime(date_breaks = "1 hour", date_labels = "%H:%M",
@@ -168,24 +202,25 @@ server <- function(input, output, session) {
       
       labs(
         x = "Uhrzeit",
-        y = "Kumulative Strahlung (MJ/m²)",
+        y = "Energie (MJ/m²)",
         title = "Strahlung & Energie"
       ) +
       theme_minimal(base_size = 14) +
       theme(plot.title = element_text(face = "bold", hjust = 0.5),
             axis.text.x = element_text(angle = 45, hjust = 1),
             panel.grid.major.x = element_line(linewidth = 0.6, color = "grey30"))
-  })
+  }, res = 96)
   
   # ---- Terrain-Tabelle ----
   output$terrain_table <- renderTable({
-    lon <- input$lon
-    lat <- input$lat
+    s <- data_reactive()
+    lon <- unique(s$lon)
+    lat <- unique(s$lat)
     
     # Werte aus DEM, Slope und Aspect extrahieren
-    height <- terra::extract(dem, cbind(lon, lat))[,1]
-    slp <- terra::extract(slope, cbind(lon, lat))[,1]
-    asp <- terra::extract(aspect, cbind(lon, lat))[,1]
+    height <- terra::extract(dem, cbind(lon, lat))[, 1]
+    slp <- terra::extract(slope, cbind(lon, lat))[, 1]
+    asp <- terra::extract(aspect, cbind(lon, lat))[, 1]
     
     # Tabelle erstellen
     data.frame(
@@ -193,6 +228,17 @@ server <- function(input, output, session) {
       "Neigung" = paste0(as.character(as.integer(slp)), "°"),
       "Exposition" = get_exposition(asp)
     )
+  })
+  
+  output$uhrzeit <- renderText({
+    
+    s <- data_reactive()
+    first_time <- s[cum_radiation_day_MJ > 5][1, time]
+    if (is.na(first_time)) {
+      "Zu wenig Energie am gewählten Tag"
+    } else {
+      paste(format(first_time, "%H:%M"), "Uhr")
+    }
   })
 }
 

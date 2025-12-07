@@ -6,7 +6,7 @@ library(tictoc)
 setwd("~/sun/tif")
 
 # Download der TIFs
-links <- read_excel("DEM_Schweiz_2x2.xlsx")[[1]]
+links <- read_excel("DEM_Schweiz_2x2.xlsx", col_names = FALSE)[[1]]
 
 download_one <- function(url) {
   fname <- file.path("tif_raw", basename(url))
