@@ -4,10 +4,11 @@ library(suncalc)
 library(data.table)
 library(ggplot2)
 
-setwd("~/sun")
+setwd("~/sun/sun_app")
 source("horizon.R")
 source("sun_position.R")
 
+setwd("~/sun/tif")
 files <- list.files(pattern = "\\.tif$", full.names = TRUE)
 rasters <- lapply(files, rast)
 dem <- do.call(mosaic, rasters)
