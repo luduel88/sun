@@ -2,3 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
+tif/tif_processed
+tif/tif_raw
