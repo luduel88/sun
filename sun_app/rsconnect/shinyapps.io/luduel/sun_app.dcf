@@ -5,6 +5,6 @@ account: luduel
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 16242918
-bundleId: 11276127
+bundleId: 11287542
 url: https://luduel.shinyapps.io/sun_app/
 version: 1
