@@ -1,4 +1,5 @@
 library(shiny)
+library(leaflet)
 library(terra)
 library(geosphere)
 library(suncalc)
@@ -8,7 +9,6 @@ library(ggplot2)
 # setwd("~/sun/sun_app")
 source("horizon.R")
 source("sun_position.R")
-
 source("inc_angle.R")
 source("am_factor.R")
 source("energy_needed.R")
@@ -16,9 +16,9 @@ source("deg_to_rad.R")
 source("get_exposition.R")
 
 # DEM laden, Slope und Exposition rechnen
-# dem <- rast("data/dem_switzerland_50m_wgs84.tif")
-# slope <- terrain(dem, v = "slope", unit = "degrees")
-# aspect <- terrain(dem, v = "aspect", unit = "degrees")
+dem <- rast("data/dem_switzerland_50m_wgs84.tif")
+slope <- terrain(dem, v = "slope", unit = "degrees")
+aspect <- terrain(dem, v = "aspect", unit = "degrees")
 
 # Parameters
 solarconstant <- 1000 # W/m2
@@ -31,7 +31,6 @@ ui <- fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      # CSS zum Entfernen der Pfeile
       tags$style(
         HTML("
             /* Keine Pfeile bei Eingabefeldern */
@@ -59,7 +58,7 @@ ui <- fluidPage(
               cursor: pointer;             /* Mauszeiger ändert sich */
             }
             
-            /* Optional: Fokus-Effekt, wenn Button gedrückt */
+            /* Fokus-Effekt */
             #go:focus {
               outline: none;
               box-shadow: 0 0 0 2px rgba(0,123,255,0.5);
@@ -67,9 +66,13 @@ ui <- fluidPage(
             ")
       ),
       
-      numericInput("lon", "Längengrad:", value = 9.25, min = 5.902, max = 10.563, step = 0.001),
-      numericInput("lat", "Breitengrad:", value = 46.79, min = 45.688, max = 47.833, step = 0.001),
+      numericInput("lon", "Längengrad:", value = 9.25, min = 5.902, max = 10.563, step = 0.0001),
+      numericInput("lat", "Breitengrad:", value = 46.79, min = 45.688, max = 47.833, step = 0.0001),
       
+      h4("Punkt auf der Karte wählen"),
+      leafletOutput("map_sidebar", height = 300),
+      
+      br(),
       dateInput("date", "Datum für Sonnenverlauf:", value = Sys.Date()),
       
       br(),
@@ -93,6 +96,41 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
+  
+  # Leaflet-Karte rendern
+  output$map_sidebar <- renderLeaflet({
+    leaflet() %>%
+      addProviderTiles(providers$OpenTopoMap) %>%
+      setView(lng = 9.25, lat = 46.79, zoom = 10)
+  })
+  
+  # Klick auf Karte abfangen
+  observeEvent(input$map_sidebar_click, {
+    click <- input$map_sidebar_click
+    
+    # NumericInputs automatisch aktualisieren
+    updateNumericInput(session, "lon", value = round(click$lng,4))
+    updateNumericInput(session, "lat", value = round(click$lat,4))
+    
+    # Marker auf Karte setzen
+    leafletProxy("map_sidebar") %>%
+      clearMarkers() %>%
+      addMarkers(lng = click$lng, lat = click$lat,
+                 popup = paste0("Lat: ", round(click$lat, 4), 
+                                "<br>Lng: ", round(click$lng, 4)))
+  })
+  
+  # Marker auch setzen, wenn man die Inputs manuell ändert
+  observe({
+    lng <- input$lon
+    lat <- input$lat
+    
+    leafletProxy("map_sidebar") %>%
+      clearMarkers() %>%
+      addMarkers(lng = lng, lat = lat,
+                 popup = paste0("Lat: ", round(lat, 4), 
+                                "<br>Lng: ", round(lng, 4)))
+  })
   
   # -------------------------------------------------
   # Gemeinsame Datenberechnung (um Doppelberechnung zu vermeiden)
@@ -235,7 +273,7 @@ server <- function(input, output, session) {
     s <- data_reactive()
     first_time <- s[cum_radiation_day_MJ > 5][1, time]
     if (is.na(first_time)) {
-      "Zu wenig Energie am gewählten Tag"
+      "Zu wenig Energie am gewählten Datum"
     } else {
       paste(format(first_time, "%H:%M"), "Uhr")
     }

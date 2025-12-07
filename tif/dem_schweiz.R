@@ -84,7 +84,7 @@ vrt(parts, vrtfile, overwrite = TRUE)
 
 writeRaster(
   rast(vrtfile),
-  file.path("tif_processed", "dem_switzerland_50m_lv95.tif"),
+  file.path("dem_switzerland_50m_lv95.tif"),
   filetype = "GTiff",
   datatype = "INT2S",
   overwrite = TRUE
@@ -94,10 +94,10 @@ writeRaster(
 unlink("tif_processed/*.vrt")
 
 # Projektion auf WGS84 statt LV95
-dem_wgs84 <- project(rast(file.path("tif_processed", "dem_switzerland_50m_lv95.tif")), "EPSG:4326")
+dem_wgs84 <- project(rast(file.path("dem_switzerland_50m_lv95.tif")), "EPSG:4326")
 
 writeRaster(round(dem_wgs84),
-            file.path("tif_processed", "dem_switzerland_50m_wgs84.tif"),
+            file.path("dem_switzerland_50m_wgs84.tif"),
             filetype = "GTiff",
             datatype = "INT2S",
             overwrite = TRUE)
