@@ -220,7 +220,7 @@ p2 <- ggplot(df, aes(
 
 animate(
   p1,
-  fps = 4,
+  fps = 2,
   width = 600,
   height = 600,
   renderer = gifski_renderer()
