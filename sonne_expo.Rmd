@@ -16,11 +16,11 @@ Im Frühling oder auch im Hochwinter bei sehr warmen Verhältnissen liest man im
 * "Im Tagesverlauf sind mittlere und vereinzelt grosse Nass- und Gleitschneelawinen zu erwarten."
 * "Touren und Hüttenaufstiege sollten früh gestartet und rechtzeitig beendet werden."
 
-Doch was ist darunter genau zu verstehen? Welche Expositionen sind zu welcher Jahreszeit und welcher Tageszeit bereits in der Planung zu vermeiden? Diese Fragen möchten die folgenden Zeilen erörtern.
+Doch was ist darunter genau zu verstehen? Wann sollte man in der Hütte sein? Welche Expositionen sind zu welcher Jahreszeit und welcher Tageszeit bereits in der Planung zu vermeiden? Diese Fragen möchten die folgenden Zeilen erörtern.
 
-Zuerst folgt eine Definition des Zustandes des Schnees, ab wann ein Hang als kritisch eingestuft wird. Danach einige Erkenntnisse zum täglichen und jahreszeitlichen Gang der Sonnenstrahlung in den Alpen. Dies wird kombiniert, um die relevanten Zeitpunkte der verschiedenen Expositionen im Jahresverlauf zu schätzen und ein Gefühl dafür zu entwickeln.
+Zuerst folgt eine Definition des Zustandes des Schnees, ab wann ein Hang als kritisch eingeschätzt wird. Danach einige Erkenntnisse zum täglichen und jahreszeitlichen Gang der Sonnenstrahlung in den Alpen. Dies wird kombiniert, um die relevanten Zeitpunkte der verschiedenen Expositionen im Jahresverlauf zu schätzen und ein Gespür dafür zu entwickeln.
 
-Einzelne Hänge können anhand einer Karte in der Planung beurteilt werden. Es gibt aber auch eine kleine App, mit der man die Strahlung auf einen Hang rechnen kann, die zusätzlich die Abschattung durch den Horizont berücksichtigt.
+Einzelne Hänge können anhand einer Karte in der Planung beurteilt werden. Im Zusammenhang mit dieser Analyse wurde auch eine kleine App programmiert, mit der man die Strahlung auf einen Hang rechnen kann. Dabei wird zusätzlich die Abschattung durch den Horizont berücksichtigt.
 
 ## Sun App
 
@@ -41,7 +41,7 @@ Es wird die Strahlungsenergie unter Berücksichtigung der Albedo berechnet, die 
 
 Es ist wichtig im Hinterkopf zu behalten, dass dies Annahmen darstellen. Nach einer klaren Nacht mit guter Abstrahlung sollte dies einen vernünftigen Richtwert darstellen. Bei schlechter Abstrahlung und bewölktem Himmel, kann es natürlich schon viel schneller instabil werden oder gar nie stabil sein am Morgen.
 
-Der wohl grösste Unsicherheitsfaktor mit einem grossen Einfluss ist die Albedo. Ist diese wesentlich grösser, weil beispielsweise wenige Zentimeter Neuschnee auf der sonst frühlingshaften Schneeoberfläche liegen, wird viel mehr Strahlung reflektiert und es kann wesentlich länger dauern, bis der Schnee nass wird. Liegt hingegen Saharastaub auf der Schneeoberfläche, kann sich die Albedo weiter verringern und die Hänge sind schon schneller instabil.
+Der wohl grösste Unsicherheitsfaktor mit einem grossen Einfluss ist die Albedo. Ist diese wesentlich grösser, weil beispielsweise wenige Zentimeter Neuschnee auf der sonst frühlingshaften Schneeoberfläche liegen, wird viel mehr Strahlung reflektiert und es kann wesentlich länger dauern, bis der Schnee nass wird. Liegt hingegen beispielsweise Saharastaub auf der Schneeoberfläche, kann sich die Albedo weiter verringern und die Hänge sind schon schneller instabil.
 
 ## Sonnenverlauf in den Alpen
 
@@ -49,7 +49,7 @@ Folgende Werte stellen eine grobe Orientierung dar:
 
 * Im Januar scheint die Sonne 8h und überstreicht $115°$ von Südost bis Südwest. Im Zenit steht sie $22°$ über dem Horizont. Eine ebene Fläche erhält $3 \; MJ/m^2$ am Tag.
 * Im Juni scheint die Sonne 16h und überstreicht $230°$ von Nordost bis Nordwest. Im Zenit steht sie $68°$ über dem Horizont. Eine ebene Fläche erhält $25 \; MJ/m^2$ am Tag.
-* Wenn die Sonne stark auf einen Hang brennt, können gut $2$ bis $3 \; MJ/m^2$ pro Stunde eintreffen.
+* Wenn die Sonne stark auf einen Hang brennt, können bis zu $3 \; MJ/m^2$ pro Stunde eintreffen.
 
 ## Strahlung im Tagesverlauf
 
@@ -113,7 +113,7 @@ table[, cum_radiation_day_MJ := cumsum(radiation*interval*60/1000000), by = .(fo
 
 ## Strahlung im Jahresverlauf
 
-Im Folgenden sind Grafiken für die Monate Januar bis Juni gezeigt für den Tagesverlauf der Gesamtenergie von 30 Grad steilen Hängen in den vier Hauptexpositionen. Die gestrichelte Linie steht als Referenz für eine ebene Fläche.
+Im Folgenden sind Grafiken für die Monate Januar bis Juni gezeigt für den Tagesverlauf der Gesamtenergie von 30 Grad steilen Hängen in den vier Hauptexpositionen. Die gestrichelte Linie steht als Referenz für eine ebene Fläche im genannten Monat.
 
 ## Monate  {.tabset}
 
@@ -162,9 +162,9 @@ daten <- data.frame(
 knitr::kable(daten)
 ```
 
-Diskussion der Kurve des Osthangs (rot) im April:
+Diskussion der Energiekurve des Osthangs (grün) im April:
 
-* Zwischen 9 und 11 Uhr verändert sich der Hang komplett. Die Energie steigt von $2 \; MJ/m^2$ auf $7 \; MJ/m^2$ in 2 Stunden.
+* Zwischen 9 und 11 Uhr verändert sich der Hang komplett. Die eingegange Energie steigt von $2 \; MJ/m^2$ auf $7 \; MJ/m^2$ in 2 Stunden.
 * Um 9 Uhr ist er nach einer klaren Nacht noch kaum angesulzt und vermutlich pickelhart zu fahren.
 * Um 10 Uhr ist er vermutlich angesulzt und grad noch sicher zu fahren.
 * Um 11 Uhr ist er in den oberen Schichten schon komplett durchweicht und wird mit jeder Minute noch gefährlicher.

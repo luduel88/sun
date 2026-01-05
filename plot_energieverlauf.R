@@ -9,22 +9,22 @@ plot_energieverlauf <- function(data, tag, inc) {
   p <- ggplot() +
     geom_line(
       data = output,
-      aes(x = date, y = cum_radiation_day_MJ, color = paste0("E-hill (", inc, " deg)")),
+      aes(x = date, y = cum_radiation_day_MJ, color = paste0("Ost (", inc, " deg)")),
       linewidth = 1.2
     ) +
     geom_line(
       data = output2,
-      aes(x = date, y = cum_radiation_day_MJ, color = paste0("S-hill (", inc, " deg)")),
+      aes(x = date, y = cum_radiation_day_MJ, color = paste0("Süd (", inc, " deg)")),
       linewidth = 1.2
     ) +
     geom_line(
       data = output3,
-      aes(x = date, y = cum_radiation_day_MJ, color = paste0("W-hill (", inc, " deg)")),
+      aes(x = date, y = cum_radiation_day_MJ, color = paste0("West (", inc, " deg)")),
       linewidth = 1.2
     ) +
     geom_line(
       data = output4,
-      aes(x = date, y = cum_radiation_day_MJ, color = paste0("N-hill (", inc, " deg)")),
+      aes(x = date, y = cum_radiation_day_MJ, color = paste0("Nord (", inc, " deg)")),
       linewidth = 1.2
     ) +
     geom_line(
@@ -37,9 +37,9 @@ plot_energieverlauf <- function(data, tag, inc) {
     geom_hline(yintercept = 0, color = "gray50", linetype = "dashed") +
     geom_hline(yintercept = energy_needed_MJ(), color = "red", linetype = "dotted", linewidth = 1) +
     labs(
-      title = paste0("Energy in Alpen - different hillsides on ", tag),
-      x = "Time",
-      y = "Energy (MJ/m²)",
+      title = paste0("Strahlung in den Alpen - Expositionen am ", tag),
+      x = "Tageszeit",
+      y = "Energie (MJ/m²)",
       color = "Legende:"
     ) +
     scale_x_datetime(
